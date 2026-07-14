@@ -1,3 +1,4 @@
 .DS_Store
+nvim.log
 zed/.config/zed/conversations/
 zed/.config/zed/prompts/

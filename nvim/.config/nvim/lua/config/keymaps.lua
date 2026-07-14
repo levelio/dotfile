@@ -8,9 +8,14 @@ for _, key in ipairs({ "<D-s>", "<C-s>" }) do
   vim.keymap.set("c", key, "<C-c><cmd>update<cr>", { desc = "Save File" })
 end
 vim.keymap.set("n", "<leader>uT", function()
-  require("config.theme").cycle_tokyonight()
-end, { desc = "Cycle TokyoNight Theme" })
+  require("config.theme").cycle_nightfox()
+end, { desc = "Cycle Nightfox Theme" })
 vim.keymap.set("i", "kj", "<Esc>", { desc = "Exit Insert Mode" })
+for _, key in ipairs({ "<C-/>", "<C-_>" }) do
+  vim.keymap.set({ "n", "t" }, key, function()
+    Snacks.terminal()
+  end, { desc = "Terminal (cwd)" })
+end
 pcall(vim.keymap.del, "n", "<leader>cd")
 pcall(vim.keymap.del, { "n", "x" }, "<leader>cf")
 vim.keymap.set("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
