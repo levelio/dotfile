@@ -2,6 +2,8 @@
 
 import { spawnSync } from "node:child_process";
 
+const shellEnvCache = new Map();
+
 const systemPrompt = [
   "You write concise Conventional Commit messages.",
   "Return only the commit message text.",
@@ -12,9 +14,50 @@ const systemPrompt = [
   "Do not wrap the response in markdown.",
 ].join("\n");
 
+function shellEnv(name) {
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(name)) {
+    return undefined;
+  }
+
+  if (shellEnvCache.has(name)) {
+    return shellEnvCache.get(name);
+  }
+
+  const start = "__NVIM_AI_ENV_START__";
+  const end = "__NVIM_AI_ENV_END__";
+  const result = spawnSync(
+    "/bin/zsh",
+    [
+      "-dfc",
+      `source "$HOME/.zshrc" >/dev/null 2>&1; printf '%s%s%s' '${start}' "$${name}" '${end}'`,
+    ],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5000,
+    },
+  );
+
+  let value;
+  if (!result.error && typeof result.stdout === "string") {
+    const from = result.stdout.lastIndexOf(start);
+    const to = from === -1 ? -1 : result.stdout.indexOf(end, from + start.length);
+    if (to !== -1) {
+      value = result.stdout.slice(from + start.length, to).trim() || undefined;
+    }
+  }
+
+  if (value) {
+    process.env[name] = value;
+  }
+
+  shellEnvCache.set(name, value);
+  return value;
+}
+
 function env(name) {
   const value = process.env[name];
-  return value && value.trim() !== "" ? value.trim() : undefined;
+  return value && value.trim() !== "" ? value.trim() : shellEnv(name);
 }
 
 function responsesUrl() {
