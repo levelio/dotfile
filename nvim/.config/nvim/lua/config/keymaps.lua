@@ -11,6 +11,10 @@ vim.keymap.set("n", "<leader>uT", function()
   require("config.theme").cycle_nightfox()
 end, { desc = "Cycle Nightfox Theme" })
 vim.keymap.set("i", "kj", "<Esc>", { desc = "Exit Insert Mode" })
+-- jumplist 后退/前进（gd/gD 跳转后用）。
+-- 行为本身是 Neovim 内建的，这里补上描述，方便 <leader>sk 搜索时识别
+vim.keymap.set("n", "<C-o>", "<C-o>", { desc = "后退" })
+vim.keymap.set("n", "<C-i>", "<C-i>", { desc = "前进" })
 for _, key in ipairs({ "<C-/>", "<C-_>" }) do
   vim.keymap.set({ "n", "t" }, key, function()
     Snacks.terminal()
@@ -18,6 +22,10 @@ for _, key in ipairs({ "<C-/>", "<C-_>" }) do
 end
 pcall(vim.keymap.del, "n", "<leader>cd")
 pcall(vim.keymap.del, { "n", "x" }, "<leader>cf")
+-- AstroNvim 无以下 buffer 键：bo(删其他)→bc，bi(删不可见)、bD(强删) 移除
+pcall(vim.keymap.del, "n", "<leader>bo")
+pcall(vim.keymap.del, "n", "<leader>bi")
+pcall(vim.keymap.del, "n", "<leader>bD")
 vim.keymap.set("n", "<leader>ld", vim.diagnostic.open_float, { desc = "Line Diagnostics" })
 vim.keymap.set({ "n", "x" }, "<leader>lf", function()
   LazyVim.format({ force = true })

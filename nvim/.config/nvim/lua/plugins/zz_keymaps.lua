@@ -35,6 +35,11 @@ local function close_current_buffer()
   Snacks.bufdelete()
 end
 
+-- bufferline 没有内置按修改时间排序，自定义 sorter（供 <leader>bsm 使用）
+local function sort_by_mtime(a, b)
+  return (vim.fn.getftime(a.path) or 0) < (vim.fn.getftime(b.path) or 0)
+end
+
 local function move_which_key_group(opts, from, to, group)
   local moved = false
   opts.spec = opts.spec or {}
@@ -64,6 +69,33 @@ return {
       { "<leader>gd", false },
       { "<leader>gD", false },
       { "<leader>gS", false },
+      -- buffer 快捷键对齐 AstroNvim（https://docs.astronvim.com/mappings#buffers）
+      { "<leader>bb", function() Snacks.picker.buffers() end, desc = "Buffer Picker" },
+      { "<leader>bd", function() Snacks.picker.buffers({ confirm = "bufdelete" }) end, desc = "Delete Buffer (Picker)" },
+      { "<leader>b\\", function() Snacks.picker.buffers({ confirm = "split" }) end, desc = "Split Buffer Horizontal" },
+      { "<leader>b|", function() Snacks.picker.buffers({ confirm = "vsplit" }) end, desc = "Split Buffer Vertical" },
+      { "<leader>bp", "<cmd>bprevious<cr>", desc = "Previous Buffer" },
+      { "<leader>bc", function() Snacks.bufdelete.other() end, desc = "Close Others" },
+      { "<leader>bC", function() Snacks.bufdelete.all() end, desc = "Close All Buffers" },
+    },
+  },
+
+  {
+    "akinsho/bufferline.nvim",
+    optional = true,
+    keys = {
+      -- 禁用 LazyVim 特有键：bp 占用了 AstroNvim 的 previous buffer；bP/bj AstroNvim 无此概念
+      { "<leader>bp", false },
+      { "<leader>bP", false },
+      { "<leader>bj", false },
+      -- AstroNvim 补充：移动与排序（bl/br 关左右两侧 LazyVim 默认已与 AstroNvim 一致，保留）
+      { ">b", "<cmd>BufferLineMoveNext<cr>", desc = "Move Buffer Right" },
+      { "<b", "<cmd>BufferLineMovePrev<cr>", desc = "Move Buffer Left" },
+      { "<leader>bse", function() require("bufferline.commands").sort_by("extension") end, desc = "Sort by Extension" },
+      { "<leader>bsi", function() require("bufferline.commands").sort_by("id") end, desc = "Sort by Buffer Number" },
+      { "<leader>bsm", function() require("bufferline.commands").sort_by(sort_by_mtime) end, desc = "Sort by Last Modification" },
+      { "<leader>bsp", function() require("bufferline.commands").sort_by("directory") end, desc = "Sort by Full Path" },
+      { "<leader>bsr", function() require("bufferline.commands").sort_by("relative_directory") end, desc = "Sort by Relative Path" },
     },
   },
 

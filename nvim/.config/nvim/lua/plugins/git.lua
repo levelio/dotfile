@@ -1,5 +1,19 @@
 local close_diffview = "<cmd>DiffviewClose<cr>"
 
+-- 窄窗口下 diff2_horizontal 两栏太挤：按打开时的窗口宽度动态选布局，
+-- 宽屏保持左右对比，窄屏切换上下分栏（可用 g<C-x> 在视图内手动循环切换）
+local function apply_diffview_layout()
+  local layout = vim.o.columns >= 160 and "diff2_horizontal" or "diff2_vertical"
+  local config = require("diffview.config")
+  config.get_config().view.default.layout = layout
+  config.get_config().view.file_history.layout = layout
+end
+
+local function diffview_open(args)
+  apply_diffview_layout()
+  vim.cmd(("DiffviewOpen %s"):format(args or ""))
+end
+
 local function map_diffview_close(bufnr)
   for _, lhs in ipairs({ "q", "gq" }) do
     vim.keymap.set("n", lhs, close_diffview, {
@@ -61,7 +75,7 @@ return {
         listing_style = "tree",
         win_config = {
           position = "left",
-          width = 40,
+          width = 28,
         },
       },
       keymaps = {
@@ -90,18 +104,25 @@ return {
         file_panel = {
           q = close_diffview,
           gq = close_diffview,
+          ["<leader>e"] = "<cmd>DiffviewFocusFiles<cr>",
+          ["<leader>b"] = "<cmd>DiffviewToggleFiles<cr>",
         },
         file_history_panel = {
           q = close_diffview,
           gq = close_diffview,
+          ["<leader>e"] = "<cmd>DiffviewFocusFiles<cr>",
+          ["<leader>b"] = "<cmd>DiffviewToggleFiles<cr>",
         },
       },
     },
     keys = {
-      { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Diff View" },
-      { "<leader>gD", "<cmd>DiffviewOpen -- %<cr>", desc = "Diff Current File" },
-      { "<leader>gS", "<cmd>DiffviewOpen --staged<cr>", desc = "Diff Staged" },
-      { "<leader>gH", "<cmd>DiffviewFileHistory %<cr>", desc = "Diff File History" },
+      { "<leader>gd", function() diffview_open("") end, desc = "Diff View" },
+      { "<leader>gD", function() diffview_open("-- %") end, desc = "Diff Current File" },
+      { "<leader>gS", function() diffview_open("--staged") end, desc = "Diff Staged" },
+      { "<leader>gH", function()
+          apply_diffview_layout()
+          vim.cmd("DiffviewFileHistory %")
+        end, desc = "Diff File History" },
       { "<leader>gq", "<cmd>DiffviewClose<cr>", desc = "Close Diff View" },
     },
   },
