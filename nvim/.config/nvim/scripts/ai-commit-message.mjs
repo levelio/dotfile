@@ -5,13 +5,30 @@ import { spawnSync } from "node:child_process";
 const shellEnvCache = new Map();
 
 const systemPrompt = [
-  "You write concise Conventional Commit messages.",
-  "Return only the commit message text.",
-  "Write the subject and body in Chinese.",
-  "Keep Conventional Commit types such as feat, fix, docs, chore in lowercase English.",
-  "Keep the subject line under 72 characters.",
-  "Add a short body only when it adds useful context.",
-  "Do not wrap the response in markdown.",
+  "You write high-quality Conventional Commits messages.",
+  "",
+  "Message layout:",
+  "<type>(<scope>): <subject>",
+  "",
+  "<optional body>",
+  "",
+  "Rules:",
+  "- type: one of feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert (lowercase English).",
+  "- scope: a short lowercase English identifier of the module/directory the diff touches (e.g. auth, ui, api, config). Omit the parentheses entirely when there is no clear scope; never leave them empty.",
+  "- subject: Chinese, imperative, and concrete — name the actual feature, bug, or config change instead of generic phrases like 更新代码 or 修复问题. No trailing period, within 72 characters (aim for 50).",
+  "- body: Chinese, only when the diff is non-trivial. Use 1-5 lines each starting with \"- \" covering what changed, why, and notable side effects; wrap each line at 72 characters. Small mechanical changes (typos, formatting, version bumps) need no body.",
+  "- breaking change: append \"!\" after type/scope and explain it in the body, or use a \"BREAKING CHANGE: \" footer.",
+  "- if the diff mixes unrelated concerns, pick the dominant one for the subject and summarize the rest in the body.",
+  "- mention issue/ticket numbers only when the diff itself references them.",
+  "",
+  "Example:",
+  "feat(auth): 支持通过 WebAuthn 登录",
+  "",
+  "- 新增 /api/auth/webauthn 注册与验证端点",
+  "- 登录页增加安全密钥选项，兼容原有密码登录",
+  "- 新增配置项 auth.webauthn_enabled，默认关闭",
+  "",
+  "Return only the commit message text. No markdown fences, no explanations.",
 ].join("\n");
 
 function shellEnv(name) {
@@ -61,28 +78,18 @@ function env(name) {
 }
 
 function responsesUrl() {
-  const explicitUrl = env("CODEX_RESPONSES_URL");
-  if (explicitUrl) {
-    return explicitUrl;
-  }
-
-  const baseUrl =
-    env("CODEX_BASE_URL") ||
-    env("CODEX_API_BASE") ||
-    env("OPENAI_BASE_URL") ||
-    env("OPENAI_API_BASE") ||
-    "https://api.openai.com/v1";
+  const baseUrl = env("POLLYENG_BASE_URL") || "https://llm.bg.pollyenglish.cn/v1";
 
   const trimmed = baseUrl.replace(/\/+$/, "");
   return trimmed.endsWith("/v1") ? `${trimmed}/responses` : `${trimmed}/v1/responses`;
 }
 
 function apiKey() {
-  return env("CODEX_API_KEY") || env("OPENAI_API_KEY");
+  return env("POLLYENG_API_KEY");
 }
 
 function model() {
-  return env("CODEX_MODEL") || "gpt-5-mini";
+  return env("POLLYENG_DEFAULT_MODEL") || "gpt-5.6-sol";
 }
 
 function run(command, args, options = {}) {
@@ -300,7 +307,7 @@ async function readStreamingCommitMessage(response) {
 async function requestCommitMessage(diff) {
   const key = apiKey();
   if (!key) {
-    throw new Error("Set CODEX_API_KEY or OPENAI_API_KEY before running this command.");
+    throw new Error("Set POLLYENG_API_KEY before running this command.");
   }
 
   const response = await fetch(responsesUrl(), {
