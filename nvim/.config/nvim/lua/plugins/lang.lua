@@ -101,6 +101,20 @@ return {
     opts = function(_, opts)
       opts.formatters_by_ft = opts.formatters_by_ft or {}
       opts.formatters_by_ft.sass = { "prettier" }
+      -- antfu/eslint-config 自己就是 formatter（官方定位是脱离 Prettier 使用），
+      -- 风格与 Prettier 相反（单引号/无分号）。JS/TS 家族若交给 prettier，
+      -- 保存时会把 ESLint 的修复改回去；移除后 conform 会 fallback 到 eslint LSP 格式化。
+      for _, ft in ipairs({
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx",
+        "vue",
+      }) do
+        opts.formatters_by_ft[ft] = nil
+      end
     end,
   },
 
